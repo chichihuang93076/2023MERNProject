@@ -19,6 +19,42 @@ router.get("/", (req, res) => {
     });
 });
 
+router.get("/instructor/:_instructor_id", (req, res) => {
+  let { _instructor_id } = req.params;
+  Course.find({ instructor: _instructor_id })
+    .populate("instructor", ["username", "email"])
+    .then((data) => {
+      res.send(data);
+    })
+    .catch(() => {
+      res.status(500).send("Can not get course data");
+    });
+});
+
+router.get("/findByName/:name", (req, res) => {
+  let { name } = req.params;
+  Course.find({ title: name })
+    .populate("instructor", ["username", "email"])
+    .then((course) => {
+      res.status(200).send(course);
+    })
+    .catch((err) => {
+      res.status(500).send(err);
+    });
+});
+
+router.get("/student/:_student_id", (req, res) => {
+  let { _student_id } = req.params;
+  Course.find({ students: _student_id })
+    .populate("instructor", ["username", "email"])
+    .then((courses) => {
+      res.status(200).send(courses);
+    })
+    .catch(() => {
+      res.status(500).send("Can not get data.");
+    });
+});
+
 router.get("/:_id", (req, res) => {
   let { _id } = req.params;
   Course.findOne({ _id })
@@ -54,6 +90,19 @@ router.post("/", async (req, res) => {
     res.status(200).send("New course has been saved.");
   } catch (err) {
     res.status(400).send("Cannot save course.");
+  }
+});
+
+router.post("/enroll/:_id", async (req, res) => {
+  let { _id } = req.params;
+  let { user_id } = req.body;
+  try {
+    let course = await Course.findOne({ _id });
+    course.students.push(user_id);
+    await course.save();
+    res.status(200).send("Done Enrollment");
+  } catch (err) {
+    res.send(err);
   }
 });
 
